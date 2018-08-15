@@ -10,7 +10,13 @@ use Innmind\HttpSession\{
     Exception\LogicException,
     Exception\ConcurrentSessionNotSupported,
 };
-use Innmind\Http\Message\ServerRequest;
+use Innmind\Http\{
+    Message\ServerRequest,
+    Headers\Headers,
+    Header\Cookie,
+    Header\CookieValue,
+    Header\Parameter\Parameter,
+};
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,6 +34,32 @@ class NativeTest extends TestCase
     {
         $manager = new Native;
         $request = $this->createMock(ServerRequest::class);
+
+        $this->assertFalse($manager->has($request));
+
+        $session = $manager->start($request);
+
+        $this->assertInstanceOf(Session::class, $session);
+        $this->assertTrue($manager->has($request));
+        $this->assertSame($session, $manager->get($request));
+    }
+
+    public function testConfigureSessionIdFromCookieOnStart()
+    {
+        $manager = new Native;
+        $request = $this->createMock(ServerRequest::class);
+        $request
+            ->expects($this->any())
+            ->method('headers')
+            ->willReturn(Headers::of(
+                new Cookie(
+                    new CookieValue(
+                        new Parameter('foo', 'bar'),
+                        new Parameter('PHPSESSID', 'some unique id'),
+                        new Parameter('bar', 'baz')
+                    )
+                )
+            ));
 
         $this->assertFalse($manager->has($request));
 
