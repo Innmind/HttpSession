@@ -14,7 +14,10 @@ use Innmind\HttpSession\{
     Exception\FailedToSaveSession,
     Exception\FailedToCloseSession,
 };
-use Innmind\Http\Message\ServerRequest;
+use Innmind\Http\{
+    Message\ServerRequest,
+    Header\Cookie,
+};
 use Innmind\Url\PathInterface;
 use Innmind\Immutable\Map;
 
@@ -36,7 +39,9 @@ final class Native implements Manager
             throw new ConcurrentSessionNotSupported;
         }
 
-        if (\session_start() === false) {
+        $this->configureSessionId($request);
+
+        if (\session_start(['use_cookies' => false]) === false) {
             throw new FailedToStartSession;
         }
 
@@ -104,5 +109,35 @@ final class Native implements Manager
 
         $this->session = null;
         $this->request = null;
+    }
+
+    private function configureSessionId(ServerRequest $request): void
+    {
+        if (!$request->headers()->has('Cookie')) {
+            return;
+        }
+
+        $cookie = $request->headers()->get('Cookie');
+
+        if (!$cookie instanceof Cookie) {
+            return;
+        }
+
+        $sessionName = \session_name();
+        $parameters = $request
+            ->headers()
+            ->get('Cookie')
+            ->values()
+            ->current()
+            ->parameters()
+            ->filter(static function(string $name) use ($sessionName): bool {
+                return $name === $sessionName;
+            });
+
+        if ($parameters->size() !== 1) {
+            return;
+        }
+
+        \session_id($parameters->current()->value());
     }
 }
