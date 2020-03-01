@@ -66,7 +66,7 @@ final class Native implements Manager
     public function get(ServerRequest $request): Session
     {
         if (!$this->contains($request)) {
-            throw new LogicException;
+            throw new LogicException('No session started');
         }
 
         return $this->session;
@@ -80,7 +80,7 @@ final class Native implements Manager
     public function save(ServerRequest $request): void
     {
         if (!$this->contains($request)) {
-            throw new LogicException;
+            throw new LogicException('No session started');
         }
 
         $this
@@ -102,7 +102,7 @@ final class Native implements Manager
     public function close(ServerRequest $request): void
     {
         if (!$this->contains($request)) {
-            throw new LogicException;
+            throw new LogicException('No session started');
         }
 
         if (\session_destroy() === false) {
