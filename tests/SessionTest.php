@@ -24,13 +24,13 @@ class SessionTest extends TestCase
 
         $this->assertSame($id, $session->id());
         $this->assertSame($name, $session->name());
-        $this->assertSame($values, $session->all());
+        $this->assertSame($values, $session->values());
         $this->assertTrue($session->contains('baz'));
         $this->assertFalse($session->contains('foo'));
         $this->assertSame('foo', $session->get('baz'));
         $this->assertNull($session->set('foobar', 42));
         $this->assertSame(42, $session->get('foobar'));
-        $this->assertSame(42, $session->all()->get('foobar'));
+        $this->assertSame(42, $session->values()->get('foobar'));
     }
 
     public function testThrowWhenInvalidValuesKey()

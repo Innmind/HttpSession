@@ -67,7 +67,7 @@ final class Session
      *
      * @return MapInterface<string, mixed>
      */
-    public function all(): MapInterface
+    public function values(): MapInterface
     {
         return $this->values;
     }

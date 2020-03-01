@@ -83,7 +83,7 @@ final class Native implements Manager
 
         $this
             ->session
-            ->all()
+            ->values()
             ->foreach(static function(string $key, $value): void {
                 $_SESSION[$key] = $value;
             });
