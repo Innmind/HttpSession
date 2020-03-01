@@ -8,6 +8,7 @@ use Innmind\HttpSession\Session\{
     Name,
 };
 use Innmind\Immutable\Map;
+use function Innmind\Immutable\assertMap;
 
 final class Session
 {
@@ -17,12 +18,7 @@ final class Session
 
     public function __construct(Id $id, Name $name, Map $values)
     {
-        if (
-            (string) $values->keyType() !== 'string' ||
-            (string) $values->valueType() !== 'mixed'
-        ) {
-            throw new \TypeError('Argument 3 must be of type Map<string, mixed>');
-        }
+        assertMap('string', 'mixed', $values, 3);
 
         $this->id = $id;
         $this->name = $name;
