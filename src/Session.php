@@ -7,21 +7,21 @@ use Innmind\HttpSession\Session\{
     Id,
     Name,
 };
-use Innmind\Immutable\MapInterface;
+use Innmind\Immutable\Map;
 
 final class Session
 {
     private Id $id;
     private Name $name;
-    private MapInterface $values;
+    private Map $values;
 
-    public function __construct(Id $id, Name $name, MapInterface $values)
+    public function __construct(Id $id, Name $name, Map $values)
     {
         if (
             (string) $values->keyType() !== 'string' ||
             (string) $values->valueType() !== 'mixed'
         ) {
-            throw new \TypeError('Argument 3 must be of type MapInterface<string, mixed>');
+            throw new \TypeError('Argument 3 must be of type Map<string, mixed>');
         }
 
         $this->id = $id;
@@ -65,9 +65,9 @@ final class Session
      *
      * It should not be used by users
      *
-     * @return MapInterface<string, mixed>
+     * @return Map<string, mixed>
      */
-    public function values(): MapInterface
+    public function values(): Map
     {
         return $this->values;
     }

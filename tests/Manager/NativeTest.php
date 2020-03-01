@@ -12,7 +12,7 @@ use Innmind\HttpSession\{
 };
 use Innmind\Http\{
     Message\ServerRequest,
-    Headers\Headers,
+    Headers,
     Header\Cookie,
     Header\CookieValue,
     Header\Parameter\Parameter,
@@ -34,6 +34,10 @@ class NativeTest extends TestCase
     {
         $manager = new Native;
         $request = $this->createMock(ServerRequest::class);
+        $request
+            ->expects($this->any())
+            ->method('headers')
+            ->willReturn(Headers::of());
 
         $this->assertFalse($manager->contains($request));
 
@@ -76,6 +80,10 @@ class NativeTest extends TestCase
 
         $manager = new Native;
         $request = $this->createMock(ServerRequest::class);
+        $request
+            ->expects($this->any())
+            ->method('headers')
+            ->willReturn(Headers::of());
 
         $manager->start($request);
         $manager->start($request);
@@ -92,7 +100,13 @@ class NativeTest extends TestCase
     {
         $manager = new Native;
 
-        $manager->start($this->createMock(ServerRequest::class));
+        $request = $this->createMock(ServerRequest::class);
+        $request
+            ->expects($this->any())
+            ->method('headers')
+            ->willReturn(Headers::of());
+
+        $manager->start($request);
 
         $this->expectException(LogicException::class);
 
@@ -110,7 +124,13 @@ class NativeTest extends TestCase
     {
         $manager = new Native;
 
-        $manager->start($this->createMock(ServerRequest::class));
+        $request = $this->createMock(ServerRequest::class);
+        $request
+            ->expects($this->any())
+            ->method('headers')
+            ->willReturn(Headers::of());
+
+        $manager->start($request);
 
         $this->expectException(LogicException::class);
 
@@ -128,7 +148,13 @@ class NativeTest extends TestCase
     {
         $manager = new Native;
 
-        $manager->start($this->createMock(ServerRequest::class));
+        $request = $this->createMock(ServerRequest::class);
+        $request
+            ->expects($this->any())
+            ->method('headers')
+            ->willReturn(Headers::of());
+
+        $manager->start($request);
 
         $this->expectException(LogicException::class);
 
@@ -139,6 +165,10 @@ class NativeTest extends TestCase
     {
         $manager = new Native;
         $request = $this->createMock(ServerRequest::class);
+        $request
+            ->expects($this->any())
+            ->method('headers')
+            ->willReturn(Headers::of());
 
         $session = $manager->start($request);
         $session->set('foo', 'bar');
@@ -159,6 +189,10 @@ class NativeTest extends TestCase
     {
         $manager = new Native;
         $request = $this->createMock(ServerRequest::class);
+        $request
+            ->expects($this->any())
+            ->method('headers')
+            ->willReturn(Headers::of());
 
         $session = $manager->start($request);
         $session->set('foo', 'bar');

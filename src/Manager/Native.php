@@ -20,16 +20,17 @@ use Innmind\Http\{
 };
 use Innmind\Url\PathInterface;
 use Innmind\Immutable\Map;
+use function Innmind\Immutable\first;
 
 final class Native implements Manager
 {
     private ?Session $session = null;
     private ?ServerRequest $request = null;
 
-    public function __construct(PathInterface $save = null)
+    public function __construct(Path $save = null)
     {
-        if ($save instanceof PathInterface) {
-            \session_save_path((string) $save);
+        if ($save instanceof Path) {
+            \session_save_path($save->toString());
         }
     }
 
@@ -45,15 +46,16 @@ final class Native implements Manager
             throw new FailedToStartSession;
         }
 
+        $values = Map::of('string', 'mixed');
+
+        foreach ($_SESSION as $key => $value) {
+            $values = ($values)($key, $value);
+        }
+
         $session = new Session(
             new Id(\session_id()),
             new Name(\session_name()),
-            Map::of(
-                'string',
-                'mixed',
-                array_keys($_SESSION),
-                array_values($_SESSION)
-            )
+            $values,
         );
         $this->request = $request;
         $this->session = $session;
@@ -113,7 +115,7 @@ final class Native implements Manager
 
     private function configureSessionId(ServerRequest $request): void
     {
-        if (!$request->headers()->has('Cookie')) {
+        if (!$request->headers()->contains('Cookie')) {
             return;
         }
 
@@ -124,20 +126,17 @@ final class Native implements Manager
         }
 
         $sessionName = \session_name();
-        $parameters = $request
-            ->headers()
-            ->get('Cookie')
-            ->values()
-            ->current()
+        $parameters = first($cookie->values())
             ->parameters()
             ->filter(static function(string $name) use ($sessionName): bool {
                 return $name === $sessionName;
-            });
+            })
+            ->values();
 
         if ($parameters->size() !== 1) {
             return;
         }
 
-        \session_id($parameters->current()->value());
+        \session_id($parameters->first()->value());
     }
 }
