@@ -20,10 +20,9 @@ composer require innmind/http-session
 use Innmind\HttpSession\Manager\Native;
 use Innmind\Http\{
     Message\Response\Response,
-    Message\StatusCode\StatusCode,
-    Headers\Headers,
+    Message\StatusCode,
+    Headers,
     Header\SetCookie,
-    Header\CookieValue,
     Header\CookieParameter\HttpOnly,
     Header\CookieParameter\Domain,
     Header\Parameter\Parameter,
@@ -41,14 +40,12 @@ $response = new Response(
     $code->associatedReasonPhrase(),
     $request->protocolVersion(),
     Headers::of(
-        new SetCookie(
-            new CookieValue(
-                new Parameter((string) $session->name(), (string) $session->id()),
-                new HttpOnly,
-                new Domain($request->url()->authority()->host())
-            )
-        )
-    )
+        SetCookie::of(
+            new Parameter($session->name()->toString(), $session->id()->toString()),
+            new HttpOnly,
+            new Domain($request->url()->authority()->host()),
+        ),
+    ),
 );
 // send the response
 ```
