@@ -18,7 +18,7 @@ use Innmind\Http\{
     Message\ServerRequest,
     Header\Cookie,
 };
-use Innmind\Url\PathInterface;
+use Innmind\Url\Path;
 use Innmind\Immutable\Map;
 use function Innmind\Immutable\first;
 
@@ -46,8 +46,13 @@ final class Native implements Manager
             throw new FailedToStartSession;
         }
 
+        /** @var Map<string, mixed> */
         $values = Map::of('string', 'mixed');
 
+        /**
+         * @var string $key
+         * @var mixed $value
+         */
         foreach ($_SESSION as $key => $value) {
             $values = ($values)($key, $value);
         }
@@ -63,12 +68,16 @@ final class Native implements Manager
         return $session;
     }
 
+    /**
+     * @psalm-suppress InvalidNullableReturnType Because request and session are always set together
+     */
     public function get(ServerRequest $request): Session
     {
         if (!$this->contains($request)) {
             throw new LogicException('No session started');
         }
 
+        /** @psalm-suppress NullableReturnStatement Because request and session are always set together */
         return $this->session;
     }
 
@@ -83,10 +92,12 @@ final class Native implements Manager
             throw new LogicException('No session started');
         }
 
+        /** @psalm-suppress PossiblyNullReference */
         $this
             ->session
             ->values()
             ->foreach(static function(string $key, $value): void {
+                /** @psalm-suppress MixedAssignment */
                 $_SESSION[$key] = $value;
             });
 

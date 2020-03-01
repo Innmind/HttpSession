@@ -14,8 +14,12 @@ final class Session
 {
     private Id $id;
     private Name $name;
+    /** @var Map<string, mixed> */
     private Map $values;
 
+    /**
+     * @param Map<string, mixed> $values
+     */
     public function __construct(Id $id, Name $name, Map $values)
     {
         assertMap('string', 'mixed', $values, 3);
