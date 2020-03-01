@@ -15,7 +15,7 @@ class IdTest extends TestCase
     {
         $id = new Id('b5vcgpppij52r1krp1tbs26i27');
 
-        $this->assertSame('b5vcgpppij52r1krp1tbs26i27', (string) $id);
+        $this->assertSame('b5vcgpppij52r1krp1tbs26i27', $id->toString());
     }
 
     public function testThrowWhenInvalidFormat()
