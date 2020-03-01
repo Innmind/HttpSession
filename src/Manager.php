@@ -9,7 +9,7 @@ interface Manager
 {
     public function start(ServerRequest $request): Session;
     public function get(ServerRequest $request): Session;
-    public function has(ServerRequest $request): bool;
+    public function contains(ServerRequest $request): bool;
     public function save(ServerRequest $request): void;
     public function close(ServerRequest $request): void;
 }

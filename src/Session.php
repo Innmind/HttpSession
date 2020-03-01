@@ -47,7 +47,7 @@ final class Session
         return $this->values->get($key);
     }
 
-    public function has(string $key): bool
+    public function contains(string $key): bool
     {
         return $this->values->contains($key);
     }

@@ -35,12 +35,12 @@ class NativeTest extends TestCase
         $manager = new Native;
         $request = $this->createMock(ServerRequest::class);
 
-        $this->assertFalse($manager->has($request));
+        $this->assertFalse($manager->contains($request));
 
         $session = $manager->start($request);
 
         $this->assertInstanceOf(Session::class, $session);
-        $this->assertTrue($manager->has($request));
+        $this->assertTrue($manager->contains($request));
         $this->assertSame($session, $manager->get($request));
     }
 
@@ -61,12 +61,12 @@ class NativeTest extends TestCase
                 )
             ));
 
-        $this->assertFalse($manager->has($request));
+        $this->assertFalse($manager->contains($request));
 
         $session = $manager->start($request);
 
         $this->assertInstanceOf(Session::class, $session);
-        $this->assertTrue($manager->has($request));
+        $this->assertTrue($manager->contains($request));
         $this->assertSame($session, $manager->get($request));
     }
 
@@ -151,7 +151,7 @@ class NativeTest extends TestCase
         $session2 = $manager->start($request);
 
         $this->assertNotSame($session, $session2);
-        $this->assertTrue($session2->has('foo'));
+        $this->assertTrue($session2->contains('foo'));
         $this->assertSame('bar', $session2->get('foo'));
     }
 
@@ -165,13 +165,13 @@ class NativeTest extends TestCase
         $manager->save($request);
 
         $session2 = $manager->start($request);
-        $this->assertTrue($session2->has('foo'));
+        $this->assertTrue($session2->contains('foo'));
         $manager->close($request);
 
         $session3 = $manager->start($request);
 
         $this->assertNotSame($session, $session3);
-        $this->assertFalse($session3->has('foo'));
+        $this->assertFalse($session3->contains('foo'));
         $this->assertFalse(isset($_SESSION['foo']));
     }
 }

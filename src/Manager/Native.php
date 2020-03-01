@@ -63,21 +63,21 @@ final class Native implements Manager
 
     public function get(ServerRequest $request): Session
     {
-        if (!$this->has($request)) {
+        if (!$this->contains($request)) {
             throw new LogicException;
         }
 
         return $this->session;
     }
 
-    public function has(ServerRequest $request): bool
+    public function contains(ServerRequest $request): bool
     {
         return $this->request === $request;
     }
 
     public function save(ServerRequest $request): void
     {
-        if (!$this->has($request)) {
+        if (!$this->contains($request)) {
             throw new LogicException;
         }
 
@@ -99,7 +99,7 @@ final class Native implements Manager
 
     public function close(ServerRequest $request): void
     {
-        if (!$this->has($request)) {
+        if (!$this->contains($request)) {
             throw new LogicException;
         }
 
