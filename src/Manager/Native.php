@@ -23,8 +23,8 @@ use Innmind\Immutable\Map;
 
 final class Native implements Manager
 {
-    private $session;
-    private $request;
+    private ?Session $session = null;
+    private ?ServerRequest $request = null;
 
     public function __construct(PathInterface $save = null)
     {

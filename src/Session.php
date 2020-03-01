@@ -11,9 +11,9 @@ use Innmind\Immutable\MapInterface;
 
 final class Session
 {
-    private $id;
-    private $name;
-    private $values;
+    private Id $id;
+    private Name $name;
+    private MapInterface $values;
 
     public function __construct(Id $id, Name $name, MapInterface $values)
     {
