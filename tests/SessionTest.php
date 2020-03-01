@@ -18,42 +18,42 @@ class SessionTest extends TestCase
         $session = new Session(
             $id = new Id('foo'),
             $name = new Name('bar'),
-            $values = (new Map('string', 'mixed'))
-                ->put('baz', 'foo')
+            $values = Map::of('string', 'mixed')
+                ('baz', 'foo')
         );
 
         $this->assertSame($id, $session->id());
         $this->assertSame($name, $session->name());
-        $this->assertSame($values, $session->all());
-        $this->assertTrue($session->has('baz'));
-        $this->assertFalse($session->has('foo'));
+        $this->assertSame($values, $session->values());
+        $this->assertTrue($session->contains('baz'));
+        $this->assertFalse($session->contains('foo'));
         $this->assertSame('foo', $session->get('baz'));
         $this->assertNull($session->set('foobar', 42));
         $this->assertSame(42, $session->get('foobar'));
-        $this->assertSame(42, $session->all()->get('foobar'));
+        $this->assertSame(42, $session->values()->get('foobar'));
     }
 
     public function testThrowWhenInvalidValuesKey()
     {
         $this->expectException(\TypeError::class);
-        $this->expectExceptionMessage('Argument 3 must be of type MapInterface<string, mixed>');
+        $this->expectExceptionMessage('Argument 3 must be of type Map<string, mixed>');
 
         new Session(
             new Id('foo'),
             new Name('bar'),
-            new Map('scalar', 'mixed')
+            Map::of('scalar', 'mixed')
         );
     }
 
     public function testThrowWhenInvalidValuesValue()
     {
         $this->expectException(\TypeError::class);
-        $this->expectExceptionMessage('Argument 3 must be of type MapInterface<string, mixed>');
+        $this->expectExceptionMessage('Argument 3 must be of type Map<string, mixed>');
 
         new Session(
             new Id('foo'),
             new Name('bar'),
-            new Map('string', 'variable')
+            Map::of('string', 'variable')
         );
     }
 }

@@ -7,22 +7,22 @@ use Innmind\HttpSession\Session\{
     Id,
     Name,
 };
-use Innmind\Immutable\MapInterface;
+use Innmind\Immutable\Map;
+use function Innmind\Immutable\assertMap;
 
 final class Session
 {
-    private $id;
-    private $name;
-    private $values;
+    private Id $id;
+    private Name $name;
+    /** @var Map<string, mixed> */
+    private Map $values;
 
-    public function __construct(Id $id, Name $name, MapInterface $values)
+    /**
+     * @param Map<string, mixed> $values
+     */
+    public function __construct(Id $id, Name $name, Map $values)
     {
-        if (
-            (string) $values->keyType() !== 'string' ||
-            (string) $values->valueType() !== 'mixed'
-        ) {
-            throw new \TypeError('Argument 3 must be of type MapInterface<string, mixed>');
-        }
+        assertMap('string', 'mixed', $values, 3);
 
         $this->id = $id;
         $this->name = $name;
@@ -47,7 +47,7 @@ final class Session
         return $this->values->get($key);
     }
 
-    public function has(string $key): bool
+    public function contains(string $key): bool
     {
         return $this->values->contains($key);
     }
@@ -65,9 +65,9 @@ final class Session
      *
      * It should not be used by users
      *
-     * @return MapInterface<string, mixed>
+     * @return Map<string, mixed>
      */
-    public function all(): MapInterface
+    public function values(): Map
     {
         return $this->values;
     }

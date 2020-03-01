@@ -18,18 +18,19 @@ use Innmind\Http\{
     Message\ServerRequest,
     Header\Cookie,
 };
-use Innmind\Url\PathInterface;
+use Innmind\Url\Path;
 use Innmind\Immutable\Map;
+use function Innmind\Immutable\first;
 
 final class Native implements Manager
 {
-    private $session;
-    private $request;
+    private ?Session $session = null;
+    private ?ServerRequest $request = null;
 
-    public function __construct(PathInterface $save = null)
+    public function __construct(Path $save = null)
     {
-        if ($save instanceof PathInterface) {
-            \session_save_path((string) $save);
+        if ($save instanceof Path) {
+            \session_save_path($save->toString());
         }
     }
 
@@ -45,15 +46,21 @@ final class Native implements Manager
             throw new FailedToStartSession;
         }
 
+        /** @var Map<string, mixed> */
+        $values = Map::of('string', 'mixed');
+
+        /**
+         * @var string $key
+         * @var mixed $value
+         */
+        foreach ($_SESSION as $key => $value) {
+            $values = ($values)($key, $value);
+        }
+
         $session = new Session(
             new Id(\session_id()),
             new Name(\session_name()),
-            Map::of(
-                'string',
-                'mixed',
-                array_keys($_SESSION),
-                array_values($_SESSION)
-            )
+            $values,
         );
         $this->request = $request;
         $this->session = $session;
@@ -61,30 +68,36 @@ final class Native implements Manager
         return $session;
     }
 
+    /**
+     * @psalm-suppress InvalidNullableReturnType Because request and session are always set together
+     */
     public function get(ServerRequest $request): Session
     {
-        if (!$this->has($request)) {
-            throw new LogicException;
+        if (!$this->contains($request)) {
+            throw new LogicException('No session started');
         }
 
+        /** @psalm-suppress NullableReturnStatement Because request and session are always set together */
         return $this->session;
     }
 
-    public function has(ServerRequest $request): bool
+    public function contains(ServerRequest $request): bool
     {
         return $this->request === $request;
     }
 
     public function save(ServerRequest $request): void
     {
-        if (!$this->has($request)) {
-            throw new LogicException;
+        if (!$this->contains($request)) {
+            throw new LogicException('No session started');
         }
 
+        /** @psalm-suppress PossiblyNullReference */
         $this
             ->session
-            ->all()
+            ->values()
             ->foreach(static function(string $key, $value): void {
+                /** @psalm-suppress MixedAssignment */
                 $_SESSION[$key] = $value;
             });
 
@@ -99,8 +112,8 @@ final class Native implements Manager
 
     public function close(ServerRequest $request): void
     {
-        if (!$this->has($request)) {
-            throw new LogicException;
+        if (!$this->contains($request)) {
+            throw new LogicException('No session started');
         }
 
         if (\session_destroy() === false) {
@@ -113,7 +126,7 @@ final class Native implements Manager
 
     private function configureSessionId(ServerRequest $request): void
     {
-        if (!$request->headers()->has('Cookie')) {
+        if (!$request->headers()->contains('Cookie')) {
             return;
         }
 
@@ -124,20 +137,17 @@ final class Native implements Manager
         }
 
         $sessionName = \session_name();
-        $parameters = $request
-            ->headers()
-            ->get('Cookie')
-            ->values()
-            ->current()
+        $parameters = first($cookie->values())
             ->parameters()
             ->filter(static function(string $name) use ($sessionName): bool {
                 return $name === $sessionName;
-            });
+            })
+            ->values();
 
         if ($parameters->size() !== 1) {
             return;
         }
 
-        \session_id($parameters->current()->value());
+        \session_id($parameters->first()->value());
     }
 }

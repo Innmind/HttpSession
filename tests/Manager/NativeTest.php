@@ -12,7 +12,7 @@ use Innmind\HttpSession\{
 };
 use Innmind\Http\{
     Message\ServerRequest,
-    Headers\Headers,
+    Headers,
     Header\Cookie,
     Header\CookieValue,
     Header\Parameter\Parameter,
@@ -34,13 +34,17 @@ class NativeTest extends TestCase
     {
         $manager = new Native;
         $request = $this->createMock(ServerRequest::class);
+        $request
+            ->expects($this->any())
+            ->method('headers')
+            ->willReturn(Headers::of());
 
-        $this->assertFalse($manager->has($request));
+        $this->assertFalse($manager->contains($request));
 
         $session = $manager->start($request);
 
         $this->assertInstanceOf(Session::class, $session);
-        $this->assertTrue($manager->has($request));
+        $this->assertTrue($manager->contains($request));
         $this->assertSame($session, $manager->get($request));
     }
 
@@ -61,12 +65,12 @@ class NativeTest extends TestCase
                 )
             ));
 
-        $this->assertFalse($manager->has($request));
+        $this->assertFalse($manager->contains($request));
 
         $session = $manager->start($request);
 
         $this->assertInstanceOf(Session::class, $session);
-        $this->assertTrue($manager->has($request));
+        $this->assertTrue($manager->contains($request));
         $this->assertSame($session, $manager->get($request));
     }
 
@@ -76,6 +80,10 @@ class NativeTest extends TestCase
 
         $manager = new Native;
         $request = $this->createMock(ServerRequest::class);
+        $request
+            ->expects($this->any())
+            ->method('headers')
+            ->willReturn(Headers::of());
 
         $manager->start($request);
         $manager->start($request);
@@ -92,7 +100,13 @@ class NativeTest extends TestCase
     {
         $manager = new Native;
 
-        $manager->start($this->createMock(ServerRequest::class));
+        $request = $this->createMock(ServerRequest::class);
+        $request
+            ->expects($this->any())
+            ->method('headers')
+            ->willReturn(Headers::of());
+
+        $manager->start($request);
 
         $this->expectException(LogicException::class);
 
@@ -110,7 +124,13 @@ class NativeTest extends TestCase
     {
         $manager = new Native;
 
-        $manager->start($this->createMock(ServerRequest::class));
+        $request = $this->createMock(ServerRequest::class);
+        $request
+            ->expects($this->any())
+            ->method('headers')
+            ->willReturn(Headers::of());
+
+        $manager->start($request);
 
         $this->expectException(LogicException::class);
 
@@ -128,7 +148,13 @@ class NativeTest extends TestCase
     {
         $manager = new Native;
 
-        $manager->start($this->createMock(ServerRequest::class));
+        $request = $this->createMock(ServerRequest::class);
+        $request
+            ->expects($this->any())
+            ->method('headers')
+            ->willReturn(Headers::of());
+
+        $manager->start($request);
 
         $this->expectException(LogicException::class);
 
@@ -139,6 +165,10 @@ class NativeTest extends TestCase
     {
         $manager = new Native;
         $request = $this->createMock(ServerRequest::class);
+        $request
+            ->expects($this->any())
+            ->method('headers')
+            ->willReturn(Headers::of());
 
         $session = $manager->start($request);
         $session->set('foo', 'bar');
@@ -151,7 +181,7 @@ class NativeTest extends TestCase
         $session2 = $manager->start($request);
 
         $this->assertNotSame($session, $session2);
-        $this->assertTrue($session2->has('foo'));
+        $this->assertTrue($session2->contains('foo'));
         $this->assertSame('bar', $session2->get('foo'));
     }
 
@@ -159,19 +189,23 @@ class NativeTest extends TestCase
     {
         $manager = new Native;
         $request = $this->createMock(ServerRequest::class);
+        $request
+            ->expects($this->any())
+            ->method('headers')
+            ->willReturn(Headers::of());
 
         $session = $manager->start($request);
         $session->set('foo', 'bar');
         $manager->save($request);
 
         $session2 = $manager->start($request);
-        $this->assertTrue($session2->has('foo'));
+        $this->assertTrue($session2->contains('foo'));
         $manager->close($request);
 
         $session3 = $manager->start($request);
 
         $this->assertNotSame($session, $session3);
-        $this->assertFalse($session3->has('foo'));
+        $this->assertFalse($session3->contains('foo'));
         $this->assertFalse(isset($_SESSION['foo']));
     }
 }

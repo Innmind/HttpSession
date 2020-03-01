@@ -15,7 +15,7 @@ class NameTest extends TestCase
     {
         $name = new Name('PHPSESSID');
 
-        $this->assertSame('PHPSESSID', (string) $name);
+        $this->assertSame('PHPSESSID', $name->toString());
     }
 
     public function testThrowWhenInvalidFormat()

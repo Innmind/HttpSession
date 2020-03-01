@@ -1,10 +1,8 @@
 # Http session
 
-| `master` | `develop` |
-|----------|-----------|
-| [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/Innmind/HttpSession/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/Innmind/HttpSession/?branch=master) | [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/Innmind/HttpSession/badges/quality-score.png?b=develop)](https://scrutinizer-ci.com/g/Innmind/HttpSession/?branch=develop) |
-| [![Code Coverage](https://scrutinizer-ci.com/g/Innmind/HttpSession/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/Innmind/HttpSession/?branch=master) | [![Code Coverage](https://scrutinizer-ci.com/g/Innmind/HttpSession/badges/coverage.png?b=develop)](https://scrutinizer-ci.com/g/Innmind/HttpSession/?branch=develop) |
-| [![Build Status](https://scrutinizer-ci.com/g/Innmind/HttpSession/badges/build.png?b=master)](https://scrutinizer-ci.com/g/Innmind/HttpSession/build-status/master) | [![Build Status](https://scrutinizer-ci.com/g/Innmind/HttpSession/badges/build.png?b=develop)](https://scrutinizer-ci.com/g/Innmind/HttpSession/build-status/develop) |
+[![Build Status](https://github.com/Innmind/HttpSession/workflows/CI/badge.svg)](https://github.com/Innmind/HttpSession/actions?query=workflow%3ACI)
+[![codecov](https://codecov.io/gh/Innmind/HttpSession/branch/develop/graph/badge.svg)](https://codecov.io/gh/Innmind/HttpSession)
+[![Type Coverage](https://shepherd.dev/github/Innmind/HttpSession/coverage.svg)](https://shepherd.dev/github/Innmind/HttpSession)
 
 Library to manage session for http requests.
 
@@ -22,10 +20,9 @@ composer require innmind/http-session
 use Innmind\HttpSession\Manager\Native;
 use Innmind\Http\{
     Message\Response\Response,
-    Message\StatusCode\StatusCode,
-    Headers\Headers,
+    Message\StatusCode,
+    Headers,
     Header\SetCookie,
-    Header\CookieValue,
     Header\CookieParameter\HttpOnly,
     Header\CookieParameter\Domain,
     Header\Parameter\Parameter,
@@ -43,14 +40,12 @@ $response = new Response(
     $code->associatedReasonPhrase(),
     $request->protocolVersion(),
     Headers::of(
-        new SetCookie(
-            new CookieValue(
-                new Parameter((string) $session->name(), (string) $session->id()),
-                new HttpOnly,
-                new Domain($request->url()->authority()->host())
-            )
-        )
-    )
+        SetCookie::of(
+            new Parameter($session->name()->toString(), $session->id()->toString()),
+            new HttpOnly,
+            new Domain($request->url()->authority()->host()),
+        ),
+    ),
 );
 // send the response
 ```
