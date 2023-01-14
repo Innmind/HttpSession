@@ -3,32 +3,34 @@ declare(strict_types = 1);
 
 namespace Tests\Innmind\HttpSession\Session;
 
-use Innmind\HttpSession\{
-    Session\Name,
-    Exception\DomainException,
-};
+use Innmind\HttpSession\Session\Name;
 use PHPUnit\Framework\TestCase;
 
 class NameTest extends TestCase
 {
     public function testInterface()
     {
-        $name = new Name('PHPSESSID');
+        $name = Name::maybe('PHPSESSID')->match(
+            static fn($name) => $name,
+            static fn() => null,
+        );
 
         $this->assertSame('PHPSESSID', $name->toString());
     }
 
-    public function testThrowWhenInvalidFormat()
+    public function testReturnNothingWhenInvalidFormat()
     {
-        $this->expectException(DomainException::class);
-
-        new Name('foo.bar');
+        $this->assertNull(Name::maybe('foo.bar')->match(
+            static fn($name) => $name,
+            static fn() => null,
+        ));
     }
 
-    public function testThrowWhenEmptyName()
+    public function testReturnNothingWhenEmptyName()
     {
-        $this->expectException(DomainException::class);
-
-        new Name('');
+        $this->assertNull(Name::maybe('')->match(
+            static fn($name) => $name,
+            static fn() => null,
+        ));
     }
 }

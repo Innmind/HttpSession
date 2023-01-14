@@ -3,20 +3,33 @@ declare(strict_types = 1);
 
 namespace Innmind\HttpSession\Session;
 
-use Innmind\HttpSession\Exception\DomainException;
-use Innmind\Immutable\Str;
+use Innmind\Immutable\{
+    Str,
+    Maybe,
+};
 
+/**
+ * @psalm-immutable
+ */
 final class Id
 {
     private string $value;
 
-    public function __construct(string $value)
+    private function __construct(string $value)
     {
-        if (!Str::of($value)->matches('~^[\w\-\_]+$~')) {
-            throw new DomainException($value);
-        }
-
         $this->value = $value;
+    }
+
+    /**
+     * @psalm-pure
+     *
+     * @return Maybe<self>
+     */
+    public static function maybe(string $value): Maybe
+    {
+        return Maybe::just(Str::of($value))
+            ->filter(static fn($value) => $value->matches('~^[\w\-\_]+$~'))
+            ->map(static fn($value) => new self($value->toString()));
     }
 
     public function toString(): string

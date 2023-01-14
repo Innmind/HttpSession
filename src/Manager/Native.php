@@ -8,46 +8,52 @@ use Innmind\HttpSession\{
     Session,
     Session\Id,
     Session\Name,
-    Exception\LogicException,
-    Exception\ConcurrentSessionNotSupported,
-    Exception\FailedToStartSession,
-    Exception\FailedToSaveSession,
-    Exception\FailedToCloseSession,
 };
 use Innmind\Http\{
     Message\ServerRequest,
     Header\Cookie,
+    Header\CookieValue,
 };
 use Innmind\Url\Path;
-use Innmind\Immutable\Map;
-use function Innmind\Immutable\first;
+use Innmind\Immutable\{
+    Map,
+    Sequence,
+    Maybe,
+    SideEffect,
+};
 
 final class Native implements Manager
 {
-    private ?Session $session = null;
-    private ?ServerRequest $request = null;
+    private ?Session\Id $session = null;
 
-    public function __construct(Path $save = null)
+    private function __construct(Path $save = null)
     {
         if ($save instanceof Path) {
-            \session_save_path($save->toString());
+            $_ = \session_save_path($save->toString());
         }
     }
 
-    public function start(ServerRequest $request): Session
+    public static function of(Path $save = null): self
     {
-        if ($this->request instanceof ServerRequest) {
-            throw new ConcurrentSessionNotSupported;
+        return new self($save);
+    }
+
+    public function start(ServerRequest $request): Maybe
+    {
+        if ($this->session instanceof Session\Id) {
+            /** @var Maybe<Session> */
+            return Maybe::nothing();
         }
 
         $this->configureSessionId($request);
 
         if (\session_start(['use_cookies' => false]) === false) {
-            throw new FailedToStartSession;
+            /** @var Maybe<Session> */
+            return Maybe::nothing();
         }
 
         /** @var Map<string, mixed> */
-        $values = Map::of('string', 'mixed');
+        $values = Map::of();
 
         /**
          * @var string $key
@@ -57,44 +63,23 @@ final class Native implements Manager
             $values = ($values)($key, $value);
         }
 
-        $session = new Session(
-            new Id(\session_id()),
-            new Name(\session_name()),
-            $values,
-        );
-        $this->request = $request;
-        $this->session = $session;
+        return Maybe::all(Id::maybe(\session_id()), Name::maybe(\session_name()))
+            ->map(static fn(Id $id, Name $name) => Session::of($id, $name, $values))
+            ->map(function($session) {
+                $this->session = $session->id();
 
-        return $session;
+                return $session;
+            });
     }
 
-    /**
-     * @psalm-suppress InvalidNullableReturnType Because request and session are always set together
-     */
-    public function get(ServerRequest $request): Session
+    public function save(Session $session): Maybe
     {
-        if (!$this->contains($request)) {
-            throw new LogicException('No session started');
+        if ($this->session !== $session->id()) {
+            /** @var Maybe<SideEffect> */
+            return Maybe::nothing();
         }
 
-        /** @psalm-suppress NullableReturnStatement Because request and session are always set together */
-        return $this->session;
-    }
-
-    public function contains(ServerRequest $request): bool
-    {
-        return $this->request === $request;
-    }
-
-    public function save(ServerRequest $request): void
-    {
-        if (!$this->contains($request)) {
-            throw new LogicException('No session started');
-        }
-
-        /** @psalm-suppress PossiblyNullReference */
-        $this
-            ->session
+        $_ = $session
             ->values()
             ->foreach(static function(string $key, $value): void {
                 /** @psalm-suppress MixedAssignment */
@@ -102,52 +87,53 @@ final class Native implements Manager
             });
 
         if (\session_write_close() === false) {
-            throw new FailedToSaveSession;
+            /** @var Maybe<SideEffect> */
+            return Maybe::nothing();
         }
 
         $this->session = null;
-        $this->request = null;
         $_SESSION = [];
+
+        return Maybe::just(new SideEffect);
     }
 
-    public function close(ServerRequest $request): void
+    public function close(Session $session): Maybe
     {
-        if (!$this->contains($request)) {
-            throw new LogicException('No session started');
+        if ($this->session !== $session->id()) {
+            /** @var Maybe<SideEffect> */
+            return Maybe::nothing();
         }
 
         if (\session_destroy() === false) {
-            throw new FailedToCloseSession;
+            /** @var Maybe<SideEffect> */
+            return Maybe::nothing();
         }
 
         $this->session = null;
-        $this->request = null;
+
+        return Maybe::just(new SideEffect);
     }
 
     private function configureSessionId(ServerRequest $request): void
     {
-        if (!$request->headers()->contains('Cookie')) {
-            return;
-        }
-
-        $cookie = $request->headers()->get('Cookie');
+        $cookie = $request->headers()->find(Cookie::class)->match(
+            static fn($cookie) => $cookie,
+            static fn() => null,
+        );
 
         if (!$cookie instanceof Cookie) {
             return;
         }
 
         $sessionName = \session_name();
-        $parameters = first($cookie->values())
-            ->parameters()
-            ->filter(static function(string $name) use ($sessionName): bool {
-                return $name === $sessionName;
-            })
-            ->values();
-
-        if ($parameters->size() !== 1) {
-            return;
-        }
-
-        \session_id($parameters->first()->value());
+        /** @var Sequence<CookieValue> */
+        $values = Sequence::of(...$cookie->values()->toList());
+        $_ = $values
+            ->flatMap(static fn($value) => $value->parameters()->values())
+            ->find(static fn($parameter) => $parameter->name() === $sessionName)
+            ->match(
+                static fn($parameter) => \session_id($parameter->value()),
+                static fn() => null,
+            );
     }
 }
