@@ -36,10 +36,7 @@ final class Session
         return $this->name;
     }
 
-    /**
-     * @return mixed
-     */
-    public function get(string $key)
+    public function get(string $key): mixed
     {
         return $this->values->get($key)->match(
             static fn(mixed $value): mixed => $value,
@@ -52,10 +49,7 @@ final class Session
         return $this->values->contains($key);
     }
 
-    /**
-     * @param mixed $value
-     */
-    public function set(string $key, $value): void
+    public function set(string $key, mixed $value): void
     {
         $this->values = $this->values->put($key, $value);
     }
