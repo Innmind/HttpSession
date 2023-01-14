@@ -19,7 +19,7 @@ class SessionTest extends TestCase
             $id = new Id('foo'),
             $name = new Name('bar'),
             $values = Map::of('string', 'mixed')
-                ('baz', 'foo')
+                ('baz', 'foo'),
         );
 
         $this->assertSame($id, $session->id());
@@ -41,7 +41,7 @@ class SessionTest extends TestCase
         new Session(
             new Id('foo'),
             new Name('bar'),
-            Map::of('scalar', 'mixed')
+            Map::of('scalar', 'mixed'),
         );
     }
 
@@ -53,7 +53,7 @@ class SessionTest extends TestCase
         new Session(
             new Id('foo'),
             new Name('bar'),
-            Map::of('string', 'variable')
+            Map::of('string', 'variable'),
         );
     }
 }

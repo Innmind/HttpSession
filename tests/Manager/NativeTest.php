@@ -60,9 +60,9 @@ class NativeTest extends TestCase
                     new CookieValue(
                         new Parameter('foo', 'bar'),
                         new Parameter('PHPSESSID', 'some unique id'),
-                        new Parameter('bar', 'baz')
-                    )
-                )
+                        new Parameter('bar', 'baz'),
+                    ),
+                ),
             ));
 
         $this->assertFalse($manager->contains($request));
