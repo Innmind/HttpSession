@@ -27,17 +27,22 @@ class SessionTest extends TestCase
         $this->assertTrue($session->contains('baz'));
         $this->assertFalse($session->contains('foo'));
         $this->assertSame('foo', $session->get('baz'));
-        $this->assertNull($session->set('foobar', 42));
-        $this->assertSame(42, $session->get('foobar'));
-        $this->assertSame(42, $session->values()->get('foobar')->match(
+        $session2 = $session->with('foobar', 42);
+        $this->assertNotSame($session, $session2);
+        $this->assertNull($session->maybe('foobar')->match(
             static fn($value) => $value,
             static fn() => null,
         ));
-        $this->assertSame(42, $session->maybe('foobar')->match(
+        $this->assertSame(42, $session2->get('foobar'));
+        $this->assertSame(42, $session2->values()->get('foobar')->match(
             static fn($value) => $value,
             static fn() => null,
         ));
-        $this->assertNull($session->maybe('foo')->match(
+        $this->assertSame(42, $session2->maybe('foobar')->match(
+            static fn($value) => $value,
+            static fn() => null,
+        ));
+        $this->assertNull($session2->maybe('foo')->match(
             static fn() => true,
             static fn() => null,
         ));

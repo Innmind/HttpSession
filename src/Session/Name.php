@@ -8,6 +8,7 @@ use Innmind\Immutable\Str;
 
 /**
  * The cookie name the id will be stored in
+ * @psalm-immutable
  */
 final class Name
 {

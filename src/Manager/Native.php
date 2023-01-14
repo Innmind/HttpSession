@@ -8,11 +8,6 @@ use Innmind\HttpSession\{
     Session,
     Session\Id,
     Session\Name,
-    Exception\LogicException,
-    Exception\ConcurrentSessionNotSupported,
-    Exception\FailedToStartSession,
-    Exception\FailedToSaveSession,
-    Exception\FailedToCloseSession,
 };
 use Innmind\Http\{
     Message\ServerRequest,
@@ -23,12 +18,13 @@ use Innmind\Url\Path;
 use Innmind\Immutable\{
     Map,
     Sequence,
+    Maybe,
+    SideEffect,
 };
 
 final class Native implements Manager
 {
-    private ?Session $session = null;
-    private ?ServerRequest $request = null;
+    private ?Session\Id $session = null;
 
     public function __construct(Path $save = null)
     {
@@ -37,16 +33,18 @@ final class Native implements Manager
         }
     }
 
-    public function start(ServerRequest $request): Session
+    public function start(ServerRequest $request): Maybe
     {
-        if ($this->request instanceof ServerRequest) {
-            throw new ConcurrentSessionNotSupported;
+        if ($this->session instanceof Session\Id) {
+            /** @var Maybe<Session> */
+            return Maybe::nothing();
         }
 
         $this->configureSessionId($request);
 
         if (\session_start(['use_cookies' => false]) === false) {
-            throw new FailedToStartSession;
+            /** @var Maybe<Session> */
+            return Maybe::nothing();
         }
 
         /** @var Map<string, mixed> */
@@ -65,39 +63,19 @@ final class Native implements Manager
             new Name(\session_name()),
             $values,
         );
-        $this->request = $request;
-        $this->session = $session;
+        $this->session = $session->id();
 
-        return $session;
+        return Maybe::just($session);
     }
 
-    /**
-     * @psalm-suppress InvalidNullableReturnType Because request and session are always set together
-     */
-    public function get(ServerRequest $request): Session
+    public function save(Session $session): Maybe
     {
-        if (!$this->contains($request)) {
-            throw new LogicException('No session started');
+        if ($this->session !== $session->id()) {
+            /** @var Maybe<SideEffect> */
+            return Maybe::nothing();
         }
 
-        /** @psalm-suppress NullableReturnStatement Because request and session are always set together */
-        return $this->session;
-    }
-
-    public function contains(ServerRequest $request): bool
-    {
-        return $this->request === $request;
-    }
-
-    public function save(ServerRequest $request): void
-    {
-        if (!$this->contains($request)) {
-            throw new LogicException('No session started');
-        }
-
-        /** @psalm-suppress PossiblyNullReference */
-        $_ = $this
-            ->session
+        $_ = $session
             ->values()
             ->foreach(static function(string $key, $value): void {
                 /** @psalm-suppress MixedAssignment */
@@ -105,26 +83,31 @@ final class Native implements Manager
             });
 
         if (\session_write_close() === false) {
-            throw new FailedToSaveSession;
+            /** @var Maybe<SideEffect> */
+            return Maybe::nothing();
         }
 
         $this->session = null;
-        $this->request = null;
         $_SESSION = [];
+
+        return Maybe::just(new SideEffect);
     }
 
-    public function close(ServerRequest $request): void
+    public function close(Session $session): Maybe
     {
-        if (!$this->contains($request)) {
-            throw new LogicException('No session started');
+        if ($this->session !== $session->id()) {
+            /** @var Maybe<SideEffect> */
+            return Maybe::nothing();
         }
 
         if (\session_destroy() === false) {
-            throw new FailedToCloseSession;
+            /** @var Maybe<SideEffect> */
+            return Maybe::nothing();
         }
 
         $this->session = null;
-        $this->request = null;
+
+        return Maybe::just(new SideEffect);
     }
 
     private function configureSessionId(ServerRequest $request): void

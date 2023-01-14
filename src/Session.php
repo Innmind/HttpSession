@@ -13,6 +13,9 @@ use Innmind\Immutable\{
     Maybe,
 };
 
+/**
+ * @psalm-immutable
+ */
 final class Session
 {
     private Id $id;
@@ -31,6 +34,8 @@ final class Session
     }
 
     /**
+     * @psalm-pure
+     *
      * @param Map<string, mixed> $values
      */
     public static function of(Id $id, Name $name, Map $values): self
@@ -74,9 +79,13 @@ final class Session
         return $this->values->contains($key);
     }
 
-    public function set(string $key, mixed $value): void
+    public function with(string $key, mixed $value): self
     {
-        $this->values = $this->values->put($key, $value);
+        return new self(
+            $this->id,
+            $this->name,
+            ($this->values)($key, $value),
+        );
     }
 
     /**

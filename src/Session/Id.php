@@ -6,6 +6,9 @@ namespace Innmind\HttpSession\Session;
 use Innmind\HttpSession\Exception\DomainException;
 use Innmind\Immutable\Str;
 
+/**
+ * @psalm-immutable
+ */
 final class Id
 {
     private string $value;
