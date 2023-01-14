@@ -16,8 +16,14 @@ class SessionTest extends TestCase
     public function testInterface()
     {
         $session = Session::of(
-            $id = new Id('foo'),
-            $name = new Name('bar'),
+            $id = Id::maybe('foo')->match(
+                static fn($id) => $id,
+                static fn() => null,
+            ),
+            $name = Name::maybe('bar')->match(
+                static fn($name) => $name,
+                static fn() => null,
+            ),
             $values = Map::of(['baz', 'foo']),
         );
 

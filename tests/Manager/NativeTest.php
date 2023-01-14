@@ -98,8 +98,14 @@ class NativeTest extends TestCase
         $this->assertNull(
             (new Native)
                 ->save(Session::of(
-                    new Session\Id('unknown'),
-                    new Session\Name('foo'),
+                    Session\Id::maybe('unknown')->match(
+                        static fn($id) => $id,
+                        static fn() => null,
+                    ),
+                    Session\Name::maybe('foo')->match(
+                        static fn($name) => $name,
+                        static fn() => null,
+                    ),
                     Map::of(),
                 ))
                 ->match(
@@ -114,8 +120,14 @@ class NativeTest extends TestCase
         $this->assertNull(
             (new Native)
                 ->close(Session::of(
-                    new Session\Id('unknown'),
-                    new Session\Name('foo'),
+                    Session\Id::maybe('unknown')->match(
+                        static fn($id) => $id,
+                        static fn() => null,
+                    ),
+                    Session\Name::maybe('foo')->match(
+                        static fn($name) => $name,
+                        static fn() => null,
+                    ),
                     Map::of(),
                 ))->match(
                     static fn($sideEffect) => $sideEffect,

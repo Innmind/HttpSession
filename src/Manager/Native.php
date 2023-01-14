@@ -58,14 +58,13 @@ final class Native implements Manager
             $values = ($values)($key, $value);
         }
 
-        $session = Session::of(
-            new Id(\session_id()),
-            new Name(\session_name()),
-            $values,
-        );
-        $this->session = $session->id();
+        return Maybe::all(Id::maybe(\session_id()), Name::maybe(\session_name()))
+            ->map(static fn(Id $id, Name $name) => Session::of($id, $name, $values))
+            ->map(function($session) {
+                $this->session = $session->id();
 
-        return Maybe::just($session);
+                return $session;
+            });
     }
 
     public function save(Session $session): Maybe
