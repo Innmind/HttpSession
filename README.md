@@ -29,7 +29,7 @@ use Innmind\Http\{
     Header\Parameter\Parameter,
 };
 
-$manager = new Native;
+$manager = Native::of();
 $request = /* an instance of ServerRequest */
 
 $session = $manager->start($request)->match(
