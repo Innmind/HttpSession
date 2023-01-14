@@ -19,11 +19,19 @@ final class Session
     /**
      * @param Map<string, mixed> $values
      */
-    public function __construct(Id $id, Name $name, Map $values)
+    private function __construct(Id $id, Name $name, Map $values)
     {
         $this->id = $id;
         $this->name = $name;
         $this->values = $values;
+    }
+
+    /**
+     * @param Map<string, mixed> $values
+     */
+    public static function of(Id $id, Name $name, Map $values): self
+    {
+        return new self($id, $name, $values);
     }
 
     public function id(): Id

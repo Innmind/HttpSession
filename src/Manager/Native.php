@@ -60,7 +60,7 @@ final class Native implements Manager
             $values = ($values)($key, $value);
         }
 
-        $session = new Session(
+        $session = Session::of(
             new Id(\session_id()),
             new Name(\session_name()),
             $values,

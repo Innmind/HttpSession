@@ -15,7 +15,7 @@ class SessionTest extends TestCase
 {
     public function testInterface()
     {
-        $session = new Session(
+        $session = Session::of(
             $id = new Id('foo'),
             $name = new Name('bar'),
             $values = Map::of(['baz', 'foo']),
