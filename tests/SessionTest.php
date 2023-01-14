@@ -33,5 +33,13 @@ class SessionTest extends TestCase
             static fn($value) => $value,
             static fn() => null,
         ));
+        $this->assertSame(42, $session->maybe('foobar')->match(
+            static fn($value) => $value,
+            static fn() => null,
+        ));
+        $this->assertNull($session->maybe('foo')->match(
+            static fn() => true,
+            static fn() => null,
+        ));
     }
 }

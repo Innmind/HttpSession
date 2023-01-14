@@ -3,11 +3,15 @@ declare(strict_types = 1);
 
 namespace Innmind\HttpSession;
 
-use Innmind\HttpSession\Session\{
-    Id,
-    Name,
+use Innmind\HttpSession\{
+    Session\Id,
+    Session\Name,
+    Exception\LogicException,
 };
-use Innmind\Immutable\Map;
+use Innmind\Immutable\{
+    Map,
+    Maybe,
+};
 
 final class Session
 {
@@ -44,12 +48,25 @@ final class Session
         return $this->name;
     }
 
+    /**
+     * @param literal-string $key
+     *
+     * @throws LogicException
+     */
     public function get(string $key): mixed
     {
-        return $this->values->get($key)->match(
+        return $this->maybe($key)->match(
             static fn(mixed $value): mixed => $value,
-            static fn() => throw new \LogicException,
+            static fn() => throw new LogicException,
         );
+    }
+
+    /**
+     * @return Maybe<mixed>
+     */
+    public function maybe(string $key): Maybe
+    {
+        return $this->values->get($key);
     }
 
     public function contains(string $key): bool
