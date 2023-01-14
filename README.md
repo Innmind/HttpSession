@@ -6,7 +6,7 @@
 
 Library to manage session for http requests.
 
-The goal is to break the paradigm of considering the request and response as a global environment. Request and response should be delt as transiting data. The session for a request should obey this principle as well, thus the signature `Manager::start(ServerRequest): Session`.
+The goal is to break the paradigm of considering the request and response as a global environment. Request and response should be delt as transiting data. The session for a request should obey this principle as well, thus the signature `Manager::start(ServerRequest): Maybe<Session>`.
 
 ## Installation
 
@@ -20,6 +20,7 @@ composer require innmind/http-session
 use Innmind\HttpSession\Manager\Native;
 use Innmind\Http\{
     Message\Response\Response,
+    Message\ServerRequest,
     Message\StatusCode,
     Headers,
     Header\SetCookie,
@@ -28,16 +29,18 @@ use Innmind\Http\{
     Header\Parameter\Parameter,
 };
 
-$manager = new Native;
-$request = /* an instance of Innmind\Http\Message\ServerRequest */
+$manager = Native::of();
+$request = /* an instance of ServerRequest */
 
-$session = $manager->start($request);
+$session = $manager->start($request)->match(
+    static fn($session) => $session,
+    static fn() => throw new \RuntimeException('Unable to start the exception'),
+);
 // inject some data in the session
-$manager->save($request);
+$manager->save($session);
 
 $response = new Response(
-    $code = StatusCode::of('OK'),
-    $code->associatedReasonPhrase(),
+    $code = StatusCode::ok,
     $request->protocolVersion(),
     Headers::of(
         SetCookie::of(

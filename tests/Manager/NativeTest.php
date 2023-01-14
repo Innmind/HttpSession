@@ -7,8 +7,6 @@ use Innmind\HttpSession\{
     Manager\Native,
     Manager,
     Session,
-    Exception\LogicException,
-    Exception\ConcurrentSessionNotSupported,
 };
 use Innmind\Http\{
     Message\ServerRequest,
@@ -16,6 +14,10 @@ use Innmind\Http\{
     Header\Cookie,
     Header\CookieValue,
     Header\Parameter\Parameter,
+};
+use Innmind\Immutable\{
+    Map,
+    SideEffect,
 };
 use PHPUnit\Framework\TestCase;
 
@@ -27,30 +29,29 @@ class NativeTest extends TestCase
 {
     public function testInterface()
     {
-        $this->assertInstanceOf(Manager::class, new Native);
+        $this->assertInstanceOf(Manager::class, Native::of());
     }
 
     public function testStart()
     {
-        $manager = new Native;
+        $manager = Native::of();
         $request = $this->createMock(ServerRequest::class);
         $request
             ->expects($this->any())
             ->method('headers')
             ->willReturn(Headers::of());
 
-        $this->assertFalse($manager->contains($request));
-
-        $session = $manager->start($request);
+        $session = $manager->start($request)->match(
+            static fn($session) => $session,
+            static fn() => null,
+        );
 
         $this->assertInstanceOf(Session::class, $session);
-        $this->assertTrue($manager->contains($request));
-        $this->assertSame($session, $manager->get($request));
     }
 
     public function testConfigureSessionIdFromCookieOnStart()
     {
-        $manager = new Native;
+        $manager = Native::of();
         $request = $this->createMock(ServerRequest::class);
         $request
             ->expects($this->any())
@@ -60,125 +61,110 @@ class NativeTest extends TestCase
                     new CookieValue(
                         new Parameter('foo', 'bar'),
                         new Parameter('PHPSESSID', 'some unique id'),
-                        new Parameter('bar', 'baz')
-                    )
-                )
+                        new Parameter('bar', 'baz'),
+                    ),
+                ),
             ));
 
-        $this->assertFalse($manager->contains($request));
-
-        $session = $manager->start($request);
+        $session = $manager->start($request)->match(
+            static fn($session) => $session,
+            static fn() => null,
+        );
 
         $this->assertInstanceOf(Session::class, $session);
-        $this->assertTrue($manager->contains($request));
-        $this->assertSame($session, $manager->get($request));
     }
 
-    public function testThrowWhenTryingToStartMultipleSessions()
+    public function testReturnNothingWhenTryingToStartMultipleSessions()
     {
-        $this->expectException(ConcurrentSessionNotSupported::class);
-
-        $manager = new Native;
+        $manager = Native::of();
         $request = $this->createMock(ServerRequest::class);
         $request
             ->expects($this->any())
             ->method('headers')
             ->willReturn(Headers::of());
 
-        $manager->start($request);
-        $manager->start($request);
+        $this->assertInstanceOf(Session::class, $manager->start($request)->match(
+            static fn($session) => $session,
+            static fn() => null,
+        ));
+        $this->assertNull($manager->start($request)->match(
+            static fn($session) => $session,
+            static fn() => null,
+        ));
     }
 
-    public function testThrowWhenTryingToGetSessionOfUnstartedRequest()
+    public function testReturnNothingWhenTryingToSaveUnknownSession()
     {
-        $this->expectException(LogicException::class);
-
-        (new Native)->get($this->createMock(ServerRequest::class));
+        $this->assertNull(
+            Native::of()
+                ->save(Session::of(
+                    Session\Id::maybe('unknown')->match(
+                        static fn($id) => $id,
+                        static fn() => null,
+                    ),
+                    Session\Name::maybe('foo')->match(
+                        static fn($name) => $name,
+                        static fn() => null,
+                    ),
+                    Map::of(),
+                ))
+                ->match(
+                    static fn($sideEffect) => $sideEffect,
+                    static fn() => null,
+                ),
+        );
     }
 
-    public function testThrowWhenTryingToGetSessionForDifferentRequest()
+    public function testReturnNothingWhenTryingToCloseUnknownSession()
     {
-        $manager = new Native;
-
-        $request = $this->createMock(ServerRequest::class);
-        $request
-            ->expects($this->any())
-            ->method('headers')
-            ->willReturn(Headers::of());
-
-        $manager->start($request);
-
-        $this->expectException(LogicException::class);
-
-        $manager->get($this->createMock(ServerRequest::class));
-    }
-
-    public function testThrowWhenTryingToSaveSessionOfUnstartedRequest()
-    {
-        $this->expectException(LogicException::class);
-
-        (new Native)->save($this->createMock(ServerRequest::class));
-    }
-
-    public function testThrowWhenTryingToSaveSessionForDifferentRequest()
-    {
-        $manager = new Native;
-
-        $request = $this->createMock(ServerRequest::class);
-        $request
-            ->expects($this->any())
-            ->method('headers')
-            ->willReturn(Headers::of());
-
-        $manager->start($request);
-
-        $this->expectException(LogicException::class);
-
-        $manager->save($this->createMock(ServerRequest::class));
-    }
-
-    public function testThrowWhenTryingToCloseSessionOfUnstartedRequest()
-    {
-        $this->expectException(LogicException::class);
-
-        (new Native)->close($this->createMock(ServerRequest::class));
-    }
-
-    public function testThrowWhenTryingToCloseSessionForDifferentRequest()
-    {
-        $manager = new Native;
-
-        $request = $this->createMock(ServerRequest::class);
-        $request
-            ->expects($this->any())
-            ->method('headers')
-            ->willReturn(Headers::of());
-
-        $manager->start($request);
-
-        $this->expectException(LogicException::class);
-
-        $manager->close($this->createMock(ServerRequest::class));
+        $this->assertNull(
+            Native::of()
+                ->close(Session::of(
+                    Session\Id::maybe('unknown')->match(
+                        static fn($id) => $id,
+                        static fn() => null,
+                    ),
+                    Session\Name::maybe('foo')->match(
+                        static fn($name) => $name,
+                        static fn() => null,
+                    ),
+                    Map::of(),
+                ))->match(
+                    static fn($sideEffect) => $sideEffect,
+                    static fn() => null,
+                ),
+        );
     }
 
     public function testSave()
     {
-        $manager = new Native;
+        $manager = Native::of();
         $request = $this->createMock(ServerRequest::class);
         $request
             ->expects($this->any())
             ->method('headers')
             ->willReturn(Headers::of());
 
-        $session = $manager->start($request);
-        $session->set('foo', 'bar');
+        $session = $manager->start($request)->match(
+            static fn($session) => $session->with('foo', 'bar'),
+            static fn() => null,
+        );
 
         $this->assertFalse(isset($_SESSION['foo']));
-        $this->assertNull($manager->save($request));
+        $this->assertInstanceOf(
+            SideEffect::class,
+            $manager->save($session)->match(
+                static fn($sideEffect) => $sideEffect,
+                static fn() => null,
+            ),
+        );
         $this->assertFalse(isset($_SESSION['foo']));
         $this->assertSame(\PHP_SESSION_NONE, \session_status());
 
-        $session2 = $manager->start($request);
+        $session2 = $manager->start($request)->match(
+            static fn($session) => $session,
+            static fn() => null,
+        );
 
         $this->assertNotSame($session, $session2);
         $this->assertTrue($session2->contains('foo'));
@@ -187,24 +173,39 @@ class NativeTest extends TestCase
 
     public function testClose()
     {
-        $manager = new Native;
+        $manager = Native::of();
         $request = $this->createMock(ServerRequest::class);
         $request
             ->expects($this->any())
             ->method('headers')
             ->willReturn(Headers::of());
 
-        $session = $manager->start($request);
-        $session->set('foo', 'bar');
-        $manager->save($request);
+        $session = $manager->start($request)->match(
+            static fn($session) => $session->with('foo', 'bar'),
+            static fn() => null,
+        );
+        $manager->save($session);
 
-        $session2 = $manager->start($request);
+        $session2 = $manager->start($request)->match(
+            static fn($session) => $session,
+            static fn() => null,
+        );
         $this->assertTrue($session2->contains('foo'));
-        $manager->close($request);
+        $this->assertInstanceOf(
+            SideEffect::class,
+            $manager->close($session2)->match(
+                static fn($sideEffect) => $sideEffect,
+                static fn() => null,
+            ),
+        );
 
-        $session3 = $manager->start($request);
+        $session3 = $manager->start($request)->match(
+            static fn($session) => $session,
+            static fn() => null,
+        );
 
         $this->assertNotSame($session, $session3);
+        $this->assertNotSame($session2, $session3);
         $this->assertFalse($session3->contains('foo'));
         $this->assertFalse(isset($_SESSION['foo']));
     }
