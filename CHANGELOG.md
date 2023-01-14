@@ -8,6 +8,7 @@
 
 ### Changed
 
+- `Innmind\HttpSession\Manager\Native` constructor is now private, use `::of()` named constructor instead
 - `Innmind\HttpSession\Session` is now immutable
 - `Innmind\HttpSession\Session\Id` is now immutable
 - `Innmind\HttpSession\Session\Name` is now immutable

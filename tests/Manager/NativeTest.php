@@ -29,12 +29,12 @@ class NativeTest extends TestCase
 {
     public function testInterface()
     {
-        $this->assertInstanceOf(Manager::class, new Native);
+        $this->assertInstanceOf(Manager::class, Native::of());
     }
 
     public function testStart()
     {
-        $manager = new Native;
+        $manager = Native::of();
         $request = $this->createMock(ServerRequest::class);
         $request
             ->expects($this->any())
@@ -51,7 +51,7 @@ class NativeTest extends TestCase
 
     public function testConfigureSessionIdFromCookieOnStart()
     {
-        $manager = new Native;
+        $manager = Native::of();
         $request = $this->createMock(ServerRequest::class);
         $request
             ->expects($this->any())
@@ -76,7 +76,7 @@ class NativeTest extends TestCase
 
     public function testReturnNothingWhenTryingToStartMultipleSessions()
     {
-        $manager = new Native;
+        $manager = Native::of();
         $request = $this->createMock(ServerRequest::class);
         $request
             ->expects($this->any())
@@ -96,7 +96,7 @@ class NativeTest extends TestCase
     public function testReturnNothingWhenTryingToSaveUnknownSession()
     {
         $this->assertNull(
-            (new Native)
+            Native::of()
                 ->save(Session::of(
                     Session\Id::maybe('unknown')->match(
                         static fn($id) => $id,
@@ -118,7 +118,7 @@ class NativeTest extends TestCase
     public function testReturnNothingWhenTryingToCloseUnknownSession()
     {
         $this->assertNull(
-            (new Native)
+            Native::of()
                 ->close(Session::of(
                     Session\Id::maybe('unknown')->match(
                         static fn($id) => $id,
@@ -138,7 +138,7 @@ class NativeTest extends TestCase
 
     public function testSave()
     {
-        $manager = new Native;
+        $manager = Native::of();
         $request = $this->createMock(ServerRequest::class);
         $request
             ->expects($this->any())
@@ -173,7 +173,7 @@ class NativeTest extends TestCase
 
     public function testClose()
     {
-        $manager = new Native;
+        $manager = Native::of();
         $request = $this->createMock(ServerRequest::class);
         $request
             ->expects($this->any())
