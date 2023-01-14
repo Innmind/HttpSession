@@ -17,10 +17,13 @@ use Innmind\HttpSession\{
 use Innmind\Http\{
     Message\ServerRequest,
     Header\Cookie,
+    Header\CookieValue,
 };
 use Innmind\Url\Path;
-use Innmind\Immutable\Map;
-use function Innmind\Immutable\first;
+use Innmind\Immutable\{
+    Map,
+    Sequence,
+};
 
 final class Native implements Manager
 {
@@ -30,7 +33,7 @@ final class Native implements Manager
     public function __construct(Path $save = null)
     {
         if ($save instanceof Path) {
-            \session_save_path($save->toString());
+            $_ = \session_save_path($save->toString());
         }
     }
 
@@ -47,7 +50,7 @@ final class Native implements Manager
         }
 
         /** @var Map<string, mixed> */
-        $values = Map::of('string', 'mixed');
+        $values = Map::of();
 
         /**
          * @var string $key
@@ -93,7 +96,7 @@ final class Native implements Manager
         }
 
         /** @psalm-suppress PossiblyNullReference */
-        $this
+        $_ = $this
             ->session
             ->values()
             ->foreach(static function(string $key, $value): void {
@@ -126,28 +129,24 @@ final class Native implements Manager
 
     private function configureSessionId(ServerRequest $request): void
     {
-        if (!$request->headers()->contains('Cookie')) {
-            return;
-        }
-
-        $cookie = $request->headers()->get('Cookie');
+        $cookie = $request->headers()->find(Cookie::class)->match(
+            static fn($cookie) => $cookie,
+            static fn() => null,
+        );
 
         if (!$cookie instanceof Cookie) {
             return;
         }
 
         $sessionName = \session_name();
-        $parameters = first($cookie->values())
-            ->parameters()
-            ->filter(static function(string $name) use ($sessionName): bool {
-                return $name === $sessionName;
-            })
-            ->values();
-
-        if ($parameters->size() !== 1) {
-            return;
-        }
-
-        \session_id($parameters->first()->value());
+        /** @var Sequence<CookieValue> */
+        $values = Sequence::of(...$cookie->values()->toList());
+        $_ = $values
+            ->flatMap(static fn($value) => $value->parameters()->values())
+            ->find(static fn($parameter) => $parameter->name() === $sessionName)
+            ->match(
+                static fn($parameter) => \session_id($parameter->value()),
+                static fn() => null,
+            );
     }
 }

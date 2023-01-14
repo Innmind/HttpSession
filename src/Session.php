@@ -8,7 +8,6 @@ use Innmind\HttpSession\Session\{
     Name,
 };
 use Innmind\Immutable\Map;
-use function Innmind\Immutable\assertMap;
 
 final class Session
 {
@@ -22,8 +21,6 @@ final class Session
      */
     public function __construct(Id $id, Name $name, Map $values)
     {
-        assertMap('string', 'mixed', $values, 3);
-
         $this->id = $id;
         $this->name = $name;
         $this->values = $values;
@@ -44,7 +41,10 @@ final class Session
      */
     public function get(string $key)
     {
-        return $this->values->get($key);
+        return $this->values->get($key)->match(
+            static fn(mixed $value): mixed => $value,
+            static fn() => throw new \LogicException,
+        );
     }
 
     public function contains(string $key): bool
