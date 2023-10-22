@@ -9,12 +9,15 @@ use Innmind\HttpSession\{
     Session,
 };
 use Innmind\Http\{
-    Message\ServerRequest,
+    ServerRequest,
+    Method,
+    ProtocolVersion,
     Headers,
     Header\Cookie,
     Header\CookieValue,
     Header\Parameter\Parameter,
 };
+use Innmind\Url\Url;
 use Innmind\Immutable\{
     Map,
     SideEffect,
@@ -35,11 +38,11 @@ class NativeTest extends TestCase
     public function testStart()
     {
         $manager = Native::of();
-        $request = $this->createMock(ServerRequest::class);
-        $request
-            ->expects($this->any())
-            ->method('headers')
-            ->willReturn(Headers::of());
+        $request = ServerRequest::of(
+            Url::of('/'),
+            Method::get,
+            ProtocolVersion::v11,
+        );
 
         $session = $manager->start($request)->match(
             static fn($session) => $session,
@@ -52,11 +55,11 @@ class NativeTest extends TestCase
     public function testConfigureSessionIdFromCookieOnStart()
     {
         $manager = Native::of();
-        $request = $this->createMock(ServerRequest::class);
-        $request
-            ->expects($this->any())
-            ->method('headers')
-            ->willReturn(Headers::of(
+        $request = ServerRequest::of(
+            Url::of('/'),
+            Method::get,
+            ProtocolVersion::v11,
+            Headers::of(
                 new Cookie(
                     new CookieValue(
                         new Parameter('foo', 'bar'),
@@ -64,7 +67,8 @@ class NativeTest extends TestCase
                         new Parameter('bar', 'baz'),
                     ),
                 ),
-            ));
+            ),
+        );
 
         $session = $manager->start($request)->match(
             static fn($session) => $session,
@@ -77,11 +81,11 @@ class NativeTest extends TestCase
     public function testReturnNothingWhenTryingToStartMultipleSessions()
     {
         $manager = Native::of();
-        $request = $this->createMock(ServerRequest::class);
-        $request
-            ->expects($this->any())
-            ->method('headers')
-            ->willReturn(Headers::of());
+        $request = ServerRequest::of(
+            Url::of('/'),
+            Method::get,
+            ProtocolVersion::v11,
+        );
 
         $this->assertInstanceOf(Session::class, $manager->start($request)->match(
             static fn($session) => $session,
@@ -139,11 +143,11 @@ class NativeTest extends TestCase
     public function testSave()
     {
         $manager = Native::of();
-        $request = $this->createMock(ServerRequest::class);
-        $request
-            ->expects($this->any())
-            ->method('headers')
-            ->willReturn(Headers::of());
+        $request = ServerRequest::of(
+            Url::of('/'),
+            Method::get,
+            ProtocolVersion::v11,
+        );
 
         $session = $manager->start($request)->match(
             static fn($session) => $session->with('foo', 'bar'),
@@ -174,11 +178,11 @@ class NativeTest extends TestCase
     public function testClose()
     {
         $manager = Native::of();
-        $request = $this->createMock(ServerRequest::class);
-        $request
-            ->expects($this->any())
-            ->method('headers')
-            ->willReturn(Headers::of());
+        $request = ServerRequest::of(
+            Url::of('/'),
+            Method::get,
+            ProtocolVersion::v11,
+        );
 
         $session = $manager->start($request)->match(
             static fn($session) => $session->with('foo', 'bar'),

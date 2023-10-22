@@ -10,7 +10,7 @@ use Innmind\HttpSession\{
     Session\Name,
 };
 use Innmind\Http\{
-    Message\ServerRequest,
+    ServerRequest,
     Header\Cookie,
     Header\CookieValue,
 };
