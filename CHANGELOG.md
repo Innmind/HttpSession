@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Requires `innmind/http:~7.0`
+
 ### Removed
 
 - Support for PHP `8.1`
