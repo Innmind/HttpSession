@@ -12,35 +12,35 @@ use Innmind\HttpSession\{
 use Innmind\Http\{
     ServerRequest,
     Header\Cookie,
-    Header\CookieValue,
 };
+use Innmind\Validation\Is;
 use Innmind\Url\Path;
 use Innmind\Immutable\{
     Map,
-    Sequence,
     Maybe,
     SideEffect,
 };
 
 final class Native implements Manager
 {
-    private ?Session\Id $session = null;
+    private ?Id $session = null;
 
-    private function __construct(Path $save = null)
+    private function __construct(?Path $save = null)
     {
         if ($save instanceof Path) {
             $_ = \session_save_path($save->toString());
         }
     }
 
-    public static function of(Path $save = null): self
+    public static function of(?Path $save = null): self
     {
         return new self($save);
     }
 
+    #[\Override]
     public function start(ServerRequest $request): Maybe
     {
-        if ($this->session instanceof Session\Id) {
+        if ($this->session instanceof Id) {
             /** @var Maybe<Session> */
             return Maybe::nothing();
         }
@@ -63,7 +63,14 @@ final class Native implements Manager
             $values = ($values)($key, $value);
         }
 
-        return Maybe::all(Id::maybe(\session_id()), Name::maybe(\session_name()))
+        return Maybe::all(
+            Maybe::just(\session_id())
+                ->keep(Is::string()->asPredicate())
+                ->flatMap(Id::maybe(...)),
+            Maybe::just(\session_name())
+                ->keep(Is::string()->asPredicate())
+                ->flatMap(Name::maybe(...)),
+        )
             ->map(static fn(Id $id, Name $name) => Session::of($id, $name, $values))
             ->map(function($session) {
                 $this->session = $session->id();
@@ -72,6 +79,7 @@ final class Native implements Manager
             });
     }
 
+    #[\Override]
     public function save(Session $session): Maybe
     {
         if ($this->session !== $session->id()) {
@@ -97,6 +105,7 @@ final class Native implements Manager
         return Maybe::just(new SideEffect);
     }
 
+    #[\Override]
     public function close(Session $session): Maybe
     {
         if ($this->session !== $session->id()) {
@@ -126,10 +135,9 @@ final class Native implements Manager
         }
 
         $sessionName = \session_name();
-        /** @var Sequence<CookieValue> */
-        $values = Sequence::of(...$cookie->values()->toList());
-        $_ = $values
-            ->flatMap(static fn($value) => $value->parameters()->values())
+        $_ = $cookie
+            ->parameters()
+            ->values()
             ->find(static fn($parameter) => $parameter->name() === $sessionName)
             ->match(
                 static fn($parameter) => \session_id($parameter->value()),

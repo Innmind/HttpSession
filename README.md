@@ -19,14 +19,13 @@ composer require innmind/http-session
 ```php
 use Innmind\HttpSession\Manager\Native;
 use Innmind\Http\{
-    Message\Response\Response,
-    Message\ServerRequest,
-    Message\StatusCode,
+    Response,
+    Response\StatusCode,
+    ServerRequest,
     Headers,
     Header\SetCookie,
-    Header\CookieParameter\HttpOnly,
-    Header\CookieParameter\Domain,
-    Header\Parameter\Parameter,
+    Header\SetCookie\Directive,
+    Header\SetCookie\Domain,
 };
 
 $manager = Native::of();
@@ -39,18 +38,20 @@ $session = $manager->start($request)->match(
 // inject some data in the session
 $manager->save($session);
 
-$response = new Response(
-    $code = StatusCode::ok,
+$response = Response::of(
+    StatusCode::ok,
     $request->protocolVersion(),
     Headers::of(
         SetCookie::of(
-            new Parameter($session->name()->toString(), $session->id()->toString()),
-            new HttpOnly,
-            new Domain($request->url()->authority()->host()),
+            $session->name()->toString(),
+            $session->id()->toString(),
+            Directive::httpOnly,
+            Domain::of($request->url()->authority()->host()),
         ),
     ),
 );
 // send the response
 ```
 
-**Note**: you should take a look at [`innmint/http-server`](https://github.com/Innmind/HttpServer) in order to know how to have access to an instance of `ServerRequest` and send the `Response`.
+> [!NOTE]
+> You should take a look at [`innmind/http-server`](https://github.com/Innmind/HttpServer) in order to know how to have access to an instance of `ServerRequest` and send the `Response`.
