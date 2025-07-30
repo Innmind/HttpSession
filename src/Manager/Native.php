@@ -24,23 +24,23 @@ use Innmind\Immutable\{
 
 final class Native implements Manager
 {
-    private ?Session\Id $session = null;
+    private ?Id $session = null;
 
-    private function __construct(Path $save = null)
+    private function __construct(?Path $save = null)
     {
         if ($save instanceof Path) {
             $_ = \session_save_path($save->toString());
         }
     }
 
-    public static function of(Path $save = null): self
+    public static function of(?Path $save = null): self
     {
         return new self($save);
     }
 
     public function start(ServerRequest $request): Maybe
     {
-        if ($this->session instanceof Session\Id) {
+        if ($this->session instanceof Id) {
             /** @var Maybe<Session> */
             return Maybe::nothing();
         }
