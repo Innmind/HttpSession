@@ -14,6 +14,7 @@ use Innmind\Http\{
     Header\Cookie,
     Header\CookieValue,
 };
+use Innmind\Validation\Is;
 use Innmind\Url\Path;
 use Innmind\Immutable\{
     Map,
@@ -38,6 +39,7 @@ final class Native implements Manager
         return new self($save);
     }
 
+    #[\Override]
     public function start(ServerRequest $request): Maybe
     {
         if ($this->session instanceof Id) {
@@ -63,7 +65,14 @@ final class Native implements Manager
             $values = ($values)($key, $value);
         }
 
-        return Maybe::all(Id::maybe(\session_id()), Name::maybe(\session_name()))
+        return Maybe::all(
+            Maybe::just(\session_id())
+                ->keep(Is::string()->asPredicate())
+                ->flatMap(Id::maybe(...)),
+            Maybe::just(\session_name())
+                ->keep(Is::string()->asPredicate())
+                ->flatMap(Name::maybe(...)),
+        )
             ->map(static fn(Id $id, Name $name) => Session::of($id, $name, $values))
             ->map(function($session) {
                 $this->session = $session->id();
@@ -72,6 +81,7 @@ final class Native implements Manager
             });
     }
 
+    #[\Override]
     public function save(Session $session): Maybe
     {
         if ($this->session !== $session->id()) {
@@ -97,6 +107,7 @@ final class Native implements Manager
         return Maybe::just(new SideEffect);
     }
 
+    #[\Override]
     public function close(Session $session): Maybe
     {
         if ($this->session !== $session->id()) {
