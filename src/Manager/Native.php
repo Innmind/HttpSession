@@ -12,13 +12,11 @@ use Innmind\HttpSession\{
 use Innmind\Http\{
     ServerRequest,
     Header\Cookie,
-    Header\CookieValue,
 };
 use Innmind\Validation\Is;
 use Innmind\Url\Path;
 use Innmind\Immutable\{
     Map,
-    Sequence,
     Maybe,
     SideEffect,
 };
@@ -137,10 +135,9 @@ final class Native implements Manager
         }
 
         $sessionName = \session_name();
-        /** @var Sequence<CookieValue> */
-        $values = Sequence::of(...$cookie->values()->toList());
-        $_ = $values
-            ->flatMap(static fn($value) => $value->parameters()->values())
+        $_ = $cookie
+            ->parameters()
+            ->values()
             ->find(static fn($parameter) => $parameter->name() === $sessionName)
             ->match(
                 static fn($parameter) => \session_id($parameter->value()),
