@@ -9,7 +9,7 @@ use Innmind\HttpSession\{
     Session\Name,
 };
 use Innmind\Immutable\Map;
-use PHPUnit\Framework\TestCase;
+use Innmind\BlackBox\PHPUnit\Framework\TestCase;
 
 class SessionTest extends TestCase
 {

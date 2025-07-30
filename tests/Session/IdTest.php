@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace Tests\Innmind\HttpSession\Session;
 
 use Innmind\HttpSession\Session\Id;
-use PHPUnit\Framework\TestCase;
+use Innmind\BlackBox\PHPUnit\Framework\TestCase;
 
 class IdTest extends TestCase
 {
