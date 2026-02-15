@@ -17,6 +17,7 @@ use Innmind\Validation\Is;
 use Innmind\Url\Path;
 use Innmind\Immutable\{
     Map,
+    Attempt,
     Maybe,
     SideEffect,
 };
@@ -39,18 +40,18 @@ final class Native implements Manager
     }
 
     #[\Override]
-    public function start(ServerRequest $request): Maybe
+    public function start(ServerRequest $request): Attempt
     {
         if ($this->session instanceof Id) {
-            /** @var Maybe<Session> */
-            return Maybe::nothing();
+            /** @var Attempt<Session> */
+            return Attempt::error(new \LogicException('Session already started'));
         }
 
         $this->configureSessionId($request);
 
         if (\session_start(['use_cookies' => false]) === false) {
-            /** @var Maybe<Session> */
-            return Maybe::nothing();
+            /** @var Attempt<Session> */
+            return Attempt::error(new \RuntimeException('Failed to start session'));
         }
 
         /** @var Map<string, mixed> */
@@ -77,15 +78,16 @@ final class Native implements Manager
                 $this->session = $session->id();
 
                 return $session;
-            });
+            })
+            ->attempt(static fn() => new \RuntimeException('Session id or name is invalid'));
     }
 
     #[\Override]
-    public function save(Session $session): Maybe
+    public function save(Session $session): Attempt
     {
         if ($this->session !== $session->id()) {
-            /** @var Maybe<SideEffect> */
-            return Maybe::nothing();
+            /** @var Attempt<SideEffect> */
+            return Attempt::error(new \LogicException('Trying to save a different session than the started one'));
         }
 
         $_ = $session
@@ -96,32 +98,32 @@ final class Native implements Manager
             });
 
         if (\session_write_close() === false) {
-            /** @var Maybe<SideEffect> */
-            return Maybe::nothing();
+            /** @var Attempt<SideEffect> */
+            return Attempt::error(new \RuntimeException('Failed to persist the session data'));
         }
 
         $this->session = null;
         $_SESSION = [];
 
-        return Maybe::just(SideEffect::identity);
+        return Attempt::result(SideEffect::identity);
     }
 
     #[\Override]
-    public function close(Session $session): Maybe
+    public function close(Session $session): Attempt
     {
         if ($this->session !== $session->id()) {
-            /** @var Maybe<SideEffect> */
-            return Maybe::nothing();
+            /** @var Attempt<SideEffect> */
+            return Attempt::error(new \LogicException('Trying to close a different session than the started one'));
         }
 
         if (\session_destroy() === false) {
-            /** @var Maybe<SideEffect> */
-            return Maybe::nothing();
+            /** @var Attempt<SideEffect> */
+            return Attempt::error(new \RuntimeException('Failed to close the session'));
         }
 
         $this->session = null;
 
-        return Maybe::just(SideEffect::identity);
+        return Attempt::result(SideEffect::identity);
     }
 
     private function configureSessionId(ServerRequest $request): void

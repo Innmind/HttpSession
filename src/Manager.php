@@ -5,27 +5,27 @@ namespace Innmind\HttpSession;
 
 use Innmind\Http\ServerRequest;
 use Innmind\Immutable\{
-    Maybe,
+    Attempt,
     SideEffect,
 };
 
 interface Manager
 {
     /**
-     * @return Maybe<Session>
+     * @return Attempt<Session>
      */
     #[\NoDiscard]
-    public function start(ServerRequest $request): Maybe;
+    public function start(ServerRequest $request): Attempt;
 
     /**
-     * @return Maybe<SideEffect>
+     * @return Attempt<SideEffect>
      */
     #[\NoDiscard]
-    public function save(Session $session): Maybe;
+    public function save(Session $session): Attempt;
 
     /**
-     * @return Maybe<SideEffect>
+     * @return Attempt<SideEffect>
      */
     #[\NoDiscard]
-    public function close(Session $session): Maybe;
+    public function close(Session $session): Attempt;
 }
