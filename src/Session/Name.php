@@ -26,6 +26,7 @@ final class Name
      *
      * @return Maybe<self>
      */
+    #[\NoDiscard]
     public static function maybe(string $value): Maybe
     {
         return Maybe::just(Str::of($value))
@@ -33,6 +34,7 @@ final class Name
             ->map(static fn($value) => new self($value->toString()));
     }
 
+    #[\NoDiscard]
     public function toString(): string
     {
         return $this->value;
