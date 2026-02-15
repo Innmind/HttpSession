@@ -102,7 +102,7 @@ final class Native implements Manager
         $this->session = null;
         $_SESSION = [];
 
-        return Maybe::just(new SideEffect);
+        return Maybe::just(SideEffect::identity);
     }
 
     #[\Override]
@@ -120,7 +120,7 @@ final class Native implements Manager
 
         $this->session = null;
 
-        return Maybe::just(new SideEffect);
+        return Maybe::just(SideEffect::identity);
     }
 
     private function configureSessionId(ServerRequest $request): void
