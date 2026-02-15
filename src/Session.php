@@ -18,19 +18,14 @@ use Innmind\Immutable\{
  */
 final class Session
 {
-    private Id $id;
-    private Name $name;
-    /** @var Map<string, mixed> */
-    private Map $values;
-
     /**
      * @param Map<string, mixed> $values
      */
-    private function __construct(Id $id, Name $name, Map $values)
-    {
-        $this->id = $id;
-        $this->name = $name;
-        $this->values = $values;
+    private function __construct(
+        private Id $id,
+        private Name $name,
+        private Map $values,
+    ) {
     }
 
     /**
