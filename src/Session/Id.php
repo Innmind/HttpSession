@@ -13,11 +13,8 @@ use Innmind\Immutable\{
  */
 final class Id
 {
-    private string $value;
-
-    private function __construct(string $value)
+    private function __construct(private string $value)
     {
-        $this->value = $value;
     }
 
     /**
@@ -25,6 +22,7 @@ final class Id
      *
      * @return Maybe<self>
      */
+    #[\NoDiscard]
     public static function maybe(string $value): Maybe
     {
         return Maybe::just(Str::of($value))
@@ -32,6 +30,7 @@ final class Id
             ->map(static fn($value) => new self($value->toString()));
     }
 
+    #[\NoDiscard]
     public function toString(): string
     {
         return $this->value;

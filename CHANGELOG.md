@@ -1,5 +1,13 @@
 # Changelog
 
+## 5.0.0 - 2026-02-15
+
+### Changed
+
+- Requires PHP `8.4`
+- Requires `innmind/foundation:~2.1`
+- `Innmind\HttpSession\Manager::start()`, `::save()` and `::close()` now return a `Innmind\Immutable\Attempt`
+
 ## 4.1.0 - 2025-07-30
 
 ### Changed

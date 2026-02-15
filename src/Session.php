@@ -18,19 +18,14 @@ use Innmind\Immutable\{
  */
 final class Session
 {
-    private Id $id;
-    private Name $name;
-    /** @var Map<string, mixed> */
-    private Map $values;
-
     /**
      * @param Map<string, mixed> $values
      */
-    private function __construct(Id $id, Name $name, Map $values)
-    {
-        $this->id = $id;
-        $this->name = $name;
-        $this->values = $values;
+    private function __construct(
+        private Id $id,
+        private Name $name,
+        private Map $values,
+    ) {
     }
 
     /**
@@ -38,16 +33,19 @@ final class Session
      *
      * @param Map<string, mixed> $values
      */
+    #[\NoDiscard]
     public static function of(Id $id, Name $name, Map $values): self
     {
         return new self($id, $name, $values);
     }
 
+    #[\NoDiscard]
     public function id(): Id
     {
         return $this->id;
     }
 
+    #[\NoDiscard]
     public function name(): Name
     {
         return $this->name;
@@ -58,6 +56,7 @@ final class Session
      *
      * @throws LogicException
      */
+    #[\NoDiscard]
     public function get(string $key): mixed
     {
         return $this->maybe($key)->match(
@@ -69,16 +68,19 @@ final class Session
     /**
      * @return Maybe<mixed>
      */
+    #[\NoDiscard]
     public function maybe(string $key): Maybe
     {
         return $this->values->get($key);
     }
 
+    #[\NoDiscard]
     public function contains(string $key): bool
     {
         return $this->values->contains($key);
     }
 
+    #[\NoDiscard]
     public function with(string $key, mixed $value): self
     {
         return new self(
@@ -95,6 +97,7 @@ final class Session
      *
      * @return Map<string, mixed>
      */
+    #[\NoDiscard]
     public function values(): Map
     {
         return $this->values;

@@ -1,6 +1,6 @@
 # Http session
 
-[![Build Status](https://github.com/Innmind/HttpSession/workflows/CI/badge.svg?branch=master)](https://github.com/Innmind/HttpSession/actions?query=workflow%3ACI)
+[![CI](https://github.com/Innmind/HttpSession/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Innmind/HttpSession/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/Innmind/HttpSession/branch/develop/graph/badge.svg)](https://codecov.io/gh/Innmind/HttpSession)
 [![Type Coverage](https://shepherd.dev/github/Innmind/HttpSession/coverage.svg)](https://shepherd.dev/github/Innmind/HttpSession)
 
