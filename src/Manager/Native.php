@@ -32,6 +32,7 @@ final class Native implements Manager
         }
     }
 
+    #[\NoDiscard]
     public static function of(?Path $save = null): self
     {
         return new self($save);
